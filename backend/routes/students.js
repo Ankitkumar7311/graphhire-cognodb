@@ -1,7 +1,16 @@
 const express = require("express");
-const { getStudentSkills } = require("../queries/studentQueries");
+
+const {
+  getStudentSkills,
+  createStudent,
+} = require("../queries/studentQueries");
 
 const router = express.Router();
+
+
+// ==========================================
+// GET STUDENT SKILLS
+// ==========================================
 
 router.get("/:studentName/skills", async (req, res) => {
   try {
@@ -20,6 +29,7 @@ router.get("/:studentName/skills", async (req, res) => {
       success: true,
       student,
     });
+
   } catch (error) {
     console.error("Student skills error:", error);
 
@@ -29,5 +39,58 @@ router.get("/:studentName/skills", async (req, res) => {
     });
   }
 });
+
+
+// ==========================================
+// ADD STUDENT
+// ==========================================
+
+router.post("/", async (req, res) => {
+  try {
+    const { name, email, skills } = req.body;
+
+    // Validation
+    if (
+      !name ||
+      !email ||
+      !Array.isArray(skills) ||
+      skills.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and at least one skill are required",
+      });
+    }
+
+    // Create student in Neo4j
+    const student = await createStudent(
+      name.trim(),
+      email.trim(),
+      skills
+    );
+
+    if (!student) {
+      return res.status(500).json({
+        success: false,
+        message: "Student could not be created",
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Student added successfully",
+      student,
+    });
+
+  } catch (error) {
+    console.error("Add student error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to add student",
+    });
+  }
+});
+
 
 module.exports = router;
