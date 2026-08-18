@@ -11,7 +11,6 @@ async function getStudentSkills(studentName) {
     const result = await session.run(
       `
       MATCH (s:Student {name: $studentName})
-
       OPTIONAL MATCH (s)-[:HAS_SKILL]->(skill:Skill)
 
       RETURN
@@ -63,12 +62,10 @@ async function createStudent(studentName, email, skills) {
 
       MERGE (s)-[:HAS_SKILL]->(skill)
 
-      WITH s, collect(skill.name) AS skills
-
       RETURN
         s.name AS studentName,
         s.email AS email,
-        skills
+        collect(skill.name) AS skills
       `,
       {
         studentName,

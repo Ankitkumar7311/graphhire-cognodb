@@ -50,23 +50,30 @@ router.post("/", async (req, res) => {
     const { name, email, skills } = req.body;
 
     // Validation
-    if (
-      !name ||
-      !email ||
-      !Array.isArray(skills) ||
-      skills.length === 0
-    ) {
+    if (!name || !email || !Array.isArray(skills) || skills.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Name, email and at least one skill are required",
       });
     }
 
-    // Create student in Neo4j
+    // Clean skills
+    const cleanedSkills = skills
+      .map((skill) => String(skill).trim())
+      .filter(Boolean);
+
+    if (cleanedSkills.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one valid skill is required",
+      });
+    }
+
+    // Create student
     const student = await createStudent(
       name.trim(),
       email.trim(),
-      skills
+      cleanedSkills
     );
 
     if (!student) {
@@ -87,7 +94,7 @@ router.post("/", async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Unable to add student",
+      message: error.message || "Unable to add student",
     });
   }
 });
